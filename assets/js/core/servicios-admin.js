@@ -41,3 +41,25 @@ export const marcarDocumento = (id, verificado) => intentar(async () => {
 
 /** Contenido del documento (PDF o imagen) como Blob. */
 export const descargarDocumento = (id) => descargar(`/admin/documentos/${encodeURIComponent(id)}/archivo`);
+
+/* ---------- Mascotas de un refugio y sus documentos ---------- */
+
+/** @returns {Promise<{refugio:object, mascotas:object[]}|null>} null si el refugio no existe */
+export async function listarMascotasRefugio(refugioId) {
+  try {
+    return await get(`/admin/refugios/${encodeURIComponent(refugioId)}/mascotas`);
+  } catch (error) {
+    if (error.estado === 404) return null;
+    throw error;
+  }
+}
+
+/** { mascota, documentos } */
+export const obtenerMascotaAdmin = (id) => get(`/admin/mascotas/${encodeURIComponent(id)}`);
+
+export const marcarDocumentoMascota = (id, verificado) => intentar(async () => {
+  const r = await patch(`/admin/documentos-mascota/${encodeURIComponent(id)}`, { verificado });
+  return { ok: true, documento: r.documento };
+});
+
+export const descargarDocumentoMascota = (id) => descargar(`/admin/documentos-mascota/${encodeURIComponent(id)}/archivo`);

@@ -36,23 +36,39 @@
 .decision { display: flex; flex-wrap: wrap; gap: var(--e3); margin-top: var(--e4); }
 .decision .boton { flex: 1 1 160px; }
 
+/* El área del visor (visor__area, visor__marco, visor__imagen) vive en components/visor.css */
 .visor { position: sticky; top: calc(var(--e5) + 76px); }
-.visor__area {
+
+/* ---------- Mascotas de un refugio (documentos por mascota) ---------- */
+.solicitud-cabecera__mascotas { margin-top: var(--e4); }
+
+.mascotas-admin { display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: var(--e3); margin-bottom: var(--e5); }
+.mascota-admin {
   display: grid;
-  place-items: center;
-  min-height: 460px;
-  margin-block: var(--e3);
-  overflow: hidden;
-  background: #eef0f3;
-  border: 2px dashed var(--borde);
+  grid-template-columns: auto 1fr;
+  gap: var(--e2) var(--e3);
+  align-items: center;
+  width: 100%;
+  padding: var(--e3);
+  text-align: left;
+  background: var(--blanco);
+  border: 2px solid var(--borde);
   border-radius: var(--radio-m);
+  cursor: pointer;
+  transition: border-color 0.15s ease, box-shadow 0.15s ease;
 }
-.visor__marco { width: 100%; height: 560px; border: 0; background: var(--blanco); }
-.visor__imagen { width: 100%; max-height: 560px; object-fit: contain; background: var(--blanco); }
+.mascota-admin:hover { border-color: var(--lila-fuerte); box-shadow: var(--sombra-m); }
+.mascota-admin--activa { border-color: var(--aqua-fuerte); background: var(--aqua-suave); }
+.mascota-admin__info { display: flex; flex-direction: column; align-items: flex-start; gap: 2px; min-width: 0; }
+.mascota-admin__info strong { overflow-wrap: anywhere; }
+.mascota-admin__docs { grid-column: 1 / -1; padding: 2px var(--e2); background: var(--lila-suave); border-radius: var(--radio-s); font-size: 0.8125rem; font-weight: 700; }
+.mascota-admin__docs--pendiente { background: var(--aviso-fondo); color: var(--aviso); }
+
+.detalle-mascota { scroll-margin-top: calc(var(--alto-encabezado) + var(--e4)); }
+.detalle-mascota__cabecera { display: grid; grid-template-columns: auto 1fr auto; gap: var(--e3); align-items: center; margin-bottom: var(--e3); }
+.detalle-mascota__nombre { font-size: 1.35rem; }
 
 @media (max-width: 900px) {
   .revision { grid-template-columns: 1fr; }
   .visor { position: static; }
-  .visor__area { min-height: 320px; }
-  .visor__marco { height: 420px; }
 }

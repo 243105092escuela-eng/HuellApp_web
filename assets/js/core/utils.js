@@ -189,6 +189,24 @@ export const ETIQUETAS_DOCUMENTO = Object.freeze({
   permiso: "Permiso de refugio",
 });
 
+/** Documentos privados (refugios y mascotas): PDF, JPG o PNG de máx. 5 MB. Devuelve el error o "". */
+export function validarDocumento(archivo) {
+  if (!archivo) return "Selecciona un archivo.";
+  if (!["application/pdf", "image/jpeg", "image/png"].includes(archivo.type)) return "Formato no permitido. Usa PDF, JPG o PNG.";
+  if (archivo.size > 5 * 1024 * 1024) return `El archivo pesa ${formatearTamano(archivo.size)}. El máximo es 5 MB.`;
+  return "";
+}
+
+/** Nombre legible de cada tipo de documento especial de una mascota. */
+export const ETIQUETAS_DOCUMENTO_MASCOTA = Object.freeze({
+  vacunacion: "Certificado de vacunación",
+  esterilizacion: "Registro de esterilización",
+  desparasitacion: "Registro de desparasitación",
+  pedigree: "Pedigree",
+  medico: "Expediente médico",
+  otro: "Otro documento",
+});
+
 /** Estado de un refugio: etiqueta visible y variante de color de la insignia. */
 export const ESTADOS_REFUGIO = Object.freeze({
   pendiente: { etiqueta: "Pendiente", clase: "pendiente" },

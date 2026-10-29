@@ -18,6 +18,7 @@
   <link rel="stylesheet" href="../../assets/css/components/formularios.css">
   <link rel="stylesheet" href="../../assets/css/components/modal.css">
   <link rel="stylesheet" href="../../assets/css/components/tabla.css">
+  <link rel="stylesheet" href="../../assets/css/components/visor.css">
   <link rel="stylesheet" href="../../assets/css/pages/refugio.css">
   <script type="module" src="../../assets/js/modules/refugio/inventario.js"></script>
 </head>
@@ -99,6 +100,44 @@
         <div class="modal__acciones">
           <button id="cancelar-mascota" class="boton boton--contorno" type="button">Cancelar</button>
           <button id="boton-guardar" class="boton boton--primario" type="submit">Guardar</button>
+        </div>
+      </form>
+    </dialog>
+
+    <!-- Documentos especiales de la mascota (los revisa el administrador de HuellApp) -->
+    <dialog id="modal-documentos" class="modal modal--ancho" aria-labelledby="documentos-titulo">
+      <h2 id="documentos-titulo" class="modal__titulo">Documentos</h2>
+      <p class="texto-suave texto-pequeno">Adjunta certificados de vacunación, registros de esterilización, pedigree u otros. Solo los ve tu refugio y el equipo de HuellApp, que los revisa.</p>
+
+      <ul id="lista-docs" class="docs-mascota" aria-label="Documentos de la mascota"></ul>
+      <p id="sin-docs" class="vacio" hidden>Esta mascota todavía no tiene documentos.</p>
+      <p id="anuncio-docs" class="solo-lector" role="status" aria-live="polite"></p>
+
+      <div id="visor-docs-zona" class="visor-docs" hidden>
+        <p id="visor-docs-titulo" class="texto-suave texto-pequeno" aria-live="polite">Ningún documento abierto</p>
+        <div id="visor-docs" class="visor__area visor__area--compacta"><p class="vacio">Elige «Ver» en un documento.</p></div>
+        <a id="visor-docs-abrir" class="enlace" target="_blank" rel="noopener" hidden>Abrir en una pestaña nueva</a>
+      </div>
+
+      <form id="formulario-doc" class="subir-doc" novalidate>
+        <h3 class="seccion-titulo">Adjuntar documento</h3>
+        <div class="formulario-grid">
+          <div class="campo" data-campo="tipo">
+            <label class="campo__etiqueta" for="doc-tipo">Tipo de documento</label>
+            <select id="doc-tipo" name="tipo" class="campo__control"><option value="">Elige…</option></select>
+            <span class="campo__error" role="alert"></span>
+          </div>
+          <div class="campo" data-campo="archivo">
+            <label class="campo__etiqueta" for="doc-archivo">Archivo</label>
+            <input id="doc-archivo" name="archivo" class="campo__control" type="file" accept="application/pdf,image/jpeg,image/png">
+            <span class="campo__ayuda">PDF, JPG o PNG. Máximo 5 MB.</span>
+            <span class="campo__error" role="alert"></span>
+          </div>
+        </div>
+        <div id="alerta-docs" role="alert" hidden></div>
+        <div class="modal__acciones">
+          <button id="cerrar-documentos" class="boton boton--contorno" type="button">Cerrar</button>
+          <button id="boton-subir-doc" class="boton boton--primario" type="submit">Subir documento</button>
         </div>
       </form>
     </dialog>

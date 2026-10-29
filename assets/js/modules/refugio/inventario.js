@@ -5,8 +5,16 @@
  */
 import { requerirRol } from "../../core/router-guard.js";
 import { montarNavbar } from "../../components/navbar.js";
-import { listarMascotas, guardarMascota, cambiarEstatus, eliminarMascota, contarPublicacionesDeMascota } from "../../core/servicios-refugio.js";
-import { crearElemento, debounce, formatearEdad, limpiarErroresAlEscribir, marcarError, mostrarAlerta, ocultarAlerta, normalizarTexto, resolverImagen, redimensionarImagen, validarImagen, ESTATUS_MASCOTA } from "../../core/utils.js";
+import { crearVisor } from "../../components/visor-documento.js";
+import {
+  listarMascotas, guardarMascota, cambiarEstatus, eliminarMascota, contarPublicacionesDeMascota,
+  listarDocumentosMascota, subirDocumentoMascota, eliminarDocumentoMascota, descargarDocumentoMascota,
+} from "../../core/servicios-refugio.js";
+import {
+  crearElemento, debounce, formatearEdad, formatearFecha, formatearTamano, leerComoDataUrl, limpiarErroresAlEscribir, marcarError,
+  mostrarAlerta, ocultarAlerta, normalizarTexto, resolverImagen, redimensionarImagen, validarDocumento, validarImagen,
+  ESTATUS_MASCOTA, ETIQUETAS_DOCUMENTO_MASCOTA,
+} from "../../core/utils.js";
 
 const LOTE = 10;
 const FOTO_POR_DEFECTO = "assets/img/mascotas/sin-foto.svg";
@@ -97,6 +105,10 @@ function crearFila(m) {
     crearElemento("td", {}, selector),
     crearElemento("td", {}, crearElemento("div", { clase: "tabla__acciones" }, [
       crearElemento("button", { clase: "boton boton--secundario boton--pequeno", texto: "Editar", atributos: { type: "button", "data-accion": "editar", "aria-label": `Editar a ${m.nombre}` } }),
+      crearElemento("button", {
+        clase: "boton boton--contorno boton--pequeno", texto: `Documentos (${m.documentos?.total ?? 0})`,
+        atributos: { type: "button", "data-accion": "documentos", "aria-label": `Documentos de ${m.nombre}: ${m.documentos?.total ?? 0}` },
+      }),
       crearElemento("button", { clase: "boton boton--peligro boton--pequeno", texto: "Eliminar", atributos: { type: "button", "data-accion": "eliminar", "aria-label": `Eliminar a ${m.nombre}` } }),
     ])),
   ]);
@@ -207,6 +219,7 @@ function enlazarEventos() {
     if (!mascota) return;
     if (boton.dataset.accion === "editar") abrirFormulario(mascota);
     if (boton.dataset.accion === "eliminar") pedirConfirmacion(mascota);
+    if (boton.dataset.accion === "documentos") abrirDocumentos(mascota);
   });
   cuerpo.addEventListener("change", async (evento) => {
     const selector = evento.target.closest('[data-accion="estatus"]');
@@ -243,6 +256,122 @@ function enlazarEventos() {
   /* Confirmación de eliminación */
   document.getElementById("cancelar-borrar").addEventListener("click", () => modalBorrar.close());
   document.getElementById("confirmar-borrar").addEventListener("click", confirmarBorrado);
+
+  enlazarDocumentos();
+}
+
+/* ---------- Documentos de la mascota ---------- */
+
+const modalDocs = document.getElementById("modal-documentos");
+const listaDocs = document.getElementById("lista-docs");
+const formularioDoc = document.getElementById("formulario-doc");
+const alertaDocs = document.getElementById("alerta-docs");
+const botonSubirDoc = document.getElementById("boton-subir-doc");
+const zonaVisorDocs = document.getElementById("visor-docs-zona");
+const visorDocs = crearVisor({
+  area: document.getElementById("visor-docs"),
+  titulo: document.getElementById("visor-docs-titulo"),
+  abrir: document.getElementById("visor-docs-abrir"),
+});
+let docsMascota = null;  // mascota cuyo diálogo está abierto
+let documentos = [];
+let docsCambiaron = false;
+
+async function abrirDocumentos(mascota) {
+  docsMascota = mascota;
+  docsCambiaron = false;
+  formularioDoc.reset();
+  formularioDoc.querySelectorAll(".campo").forEach((c) => marcarError(c, ""));
+  ocultarAlerta(alertaDocs);
+  visorDocs.reiniciar();
+  zonaVisorDocs.hidden = true;
+  document.getElementById("documentos-titulo").textContent = `Documentos de ${mascota.nombre}`;
+  listaDocs.replaceChildren(crearElemento("li", { clase: "vacio", texto: "Cargando documentos…" }));
+  modalDocs.showModal();
+  documentos = await listarDocumentosMascota(mascota.id);
+  renderDocumentos();
+}
+
+function renderDocumentos() {
+  document.getElementById("sin-docs").hidden = documentos.length > 0;
+  const fragmento = document.createDocumentFragment();
+  documentos.forEach((d) => {
+    const etiqueta = ETIQUETAS_DOCUMENTO_MASCOTA[d.tipo] || d.tipo;
+    fragmento.append(crearElemento("li", { clase: "doc-mascota", atributos: { "data-id": d.id } }, [
+      crearElemento("div", { clase: "doc-mascota__info" }, [
+        crearElemento("strong", { texto: etiqueta }),
+        crearElemento("span", { clase: "texto-suave texto-pequeno", texto: `${d.nombre} · ${formatearTamano(d.tamano)} · ${formatearFecha(d.fecha)}` }),
+      ]),
+      crearElemento("div", { clase: "doc-mascota__acciones" }, [
+        crearElemento("span", { clase: `insignia insignia--${d.verificado ? "aprobado" : "pendiente"}`, texto: d.verificado ? "Revisado por HuellApp" : "Pendiente de revisión" }),
+        crearElemento("button", { clase: "boton boton--contorno boton--pequeno", texto: "Ver", atributos: { type: "button", "data-doc-accion": "ver", "aria-label": `Ver ${etiqueta}` } }),
+        crearElemento("button", { clase: "boton boton--peligro boton--pequeno", texto: "Eliminar", atributos: { type: "button", "data-doc-accion": "eliminar", "aria-label": `Eliminar ${etiqueta}` } }),
+      ]),
+    ]));
+  });
+  listaDocs.replaceChildren(fragmento);
+}
+
+function enlazarDocumentos() {
+  const tipo = formularioDoc.elements.tipo;
+  tipo.append(...Object.entries(ETIQUETAS_DOCUMENTO_MASCOTA).map(([valor, etiqueta]) => crearElemento("option", { texto: etiqueta, atributos: { value: valor } })));
+  limpiarErroresAlEscribir(formularioDoc);
+
+  document.getElementById("cerrar-documentos").addEventListener("click", () => modalDocs.close());
+  modalDocs.addEventListener("close", async () => {
+    visorDocs.reiniciar();
+    if (docsCambiaron) await recargar(); // actualiza el contador "Documentos (n)" de la tabla
+  });
+
+  listaDocs.addEventListener("click", async (evento) => {
+    const boton = evento.target.closest("[data-doc-accion]");
+    if (!boton) return;
+    const documento = documentos.find((d) => d.id === boton.closest("li").dataset.id);
+    if (!documento) return;
+    const etiqueta = ETIQUETAS_DOCUMENTO_MASCOTA[documento.tipo] || documento.tipo;
+
+    if (boton.dataset.docAccion === "ver") {
+      zonaVisorDocs.hidden = false;
+      listaDocs.querySelectorAll(".doc-mascota").forEach((li) => li.classList.toggle("doc-mascota--activo", li.dataset.id === documento.id));
+      visorDocs.mostrar(() => descargarDocumentoMascota(docsMascota.id, documento.id), `${etiqueta} — ${documento.nombre}`);
+      return;
+    }
+    // Eliminar (con confirmación nativa: es una acción pequeña dentro del diálogo)
+    if (!window.confirm(`¿Eliminar «${documento.nombre}»? Esta acción no se puede deshacer.`)) return;
+    const resultado = await eliminarDocumentoMascota(docsMascota.id, documento.id);
+    if (!resultado.ok) { mostrarAlerta(alertaDocs, "error", resultado.error); return; }
+    documentos = documentos.filter((d) => d.id !== documento.id);
+    docsCambiaron = true;
+    visorDocs.reiniciar();
+    zonaVisorDocs.hidden = true;
+    renderDocumentos();
+    document.getElementById("anuncio-docs").textContent = `${etiqueta} eliminado.`;
+  });
+
+  formularioDoc.addEventListener("submit", async (evento) => {
+    evento.preventDefault();
+    ocultarAlerta(alertaDocs);
+    const archivo = formularioDoc.elements.archivo.files[0];
+    const errores = { tipo: tipo.value ? "" : "Elige el tipo de documento.", archivo: validarDocumento(archivo) };
+    Object.entries(errores).forEach(([nombre, mensaje]) => marcarError(formularioDoc.querySelector(`[data-campo="${nombre}"]`), mensaje));
+    if (errores.tipo || errores.archivo) return;
+
+    botonSubirDoc.disabled = true;
+    try {
+      const dataUrl = await leerComoDataUrl(archivo);
+      const resultado = await subirDocumentoMascota(docsMascota.id, { tipo: tipo.value, nombre: archivo.name.slice(0, 120), dataUrl });
+      if (!resultado.ok) { mostrarAlerta(alertaDocs, "error", resultado.error); return; }
+      documentos.push(resultado.documento);
+      docsCambiaron = true;
+      formularioDoc.reset();
+      renderDocumentos();
+      mostrarAlerta(alertaDocs, "exito", "Documento subido. El equipo de HuellApp lo revisará.");
+    } catch {
+      mostrarAlerta(alertaDocs, "error", "No pudimos leer ese archivo. Prueba con otro.");
+    } finally {
+      botonSubirDoc.disabled = false;
+    }
+  });
 }
 
 async function pedirConfirmacion(mascota) {

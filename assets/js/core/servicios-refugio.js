@@ -2,7 +2,7 @@
  * servicios-refugio.js — Datos del panel de refugio (inventario, publicaciones, perfil, resumen).
  * El servidor sabe de qué refugio se trata por la sesión: aquí nunca se envía un id de refugio.
  */
-import { get, post, put, patch, del, intentar } from "./api.js";
+import { get, post, put, patch, del, descargar, intentar } from "./api.js";
 
 /* ---------- Resumen ---------- */
 export const obtenerResumen = () => get("/refugio/resumen");
@@ -38,6 +38,26 @@ export const eliminarMascota = (id) => intentar(async () => {
   return { ok: true, publicacionesEliminadas: r.publicacionesEliminadas };
 });
 
+/* ---------- Documentos de una mascota (vacunas, esterilización, pedigree...) ---------- */
+
+export async function listarDocumentosMascota(mascotaId) {
+  return (await get(`/refugio/mascotas/${mascotaId}/documentos`)).documentos;
+}
+
+/** @param {{tipo:string, nombre:string, dataUrl:string}} documento  PDF, JPG o PNG de máx. 5 MB */
+export const subirDocumentoMascota = (mascotaId, documento) => intentar(async () => {
+  const r = await post(`/refugio/mascotas/${mascotaId}/documentos`, documento);
+  return { ok: true, documento: r.documento };
+});
+
+export const eliminarDocumentoMascota = (mascotaId, documentoId) => intentar(async () => {
+  await del(`/refugio/mascotas/${mascotaId}/documentos/${documentoId}`);
+  return { ok: true };
+});
+
+/** Contenido del documento como Blob (los documentos son privados: se descargan con la sesión). */
+export const descargarDocumentoMascota = (mascotaId, documentoId) => descargar(`/refugio/mascotas/${mascotaId}/documentos/${documentoId}/archivo`);
+
 /* ---------- Publicaciones ---------- */
 
 /** Publicaciones del refugio con el nombre y estatus de la mascota asociada. */
@@ -45,9 +65,18 @@ export async function listarPublicaciones() {
   return (await get("/refugio/publicaciones")).publicaciones;
 }
 
-/** @param {{mascotaId:string, texto:string, foto?:string}} datos  Sin `foto` se usa la de la mascota. */
-export const crearPublicacionRefugio = ({ mascotaId, texto, foto = "" }) => intentar(async () => {
-  const r = await post("/refugio/publicaciones", { mascotaId, texto, foto });
+/**
+ * @param {{mascotaId:string, texto:string, foto?:string, republicarCadaDias?:number|null}} datos
+ *   Sin `foto` se usa la de la mascota. `republicarCadaDias` (1–90) activa la republicación automática.
+ */
+export const crearPublicacionRefugio = ({ mascotaId, texto, foto = "", republicarCadaDias = null }) => intentar(async () => {
+  const r = await post("/refugio/publicaciones", { mascotaId, texto, foto, republicarCadaDias });
+  return { ok: true, publicacion: r.publicacion };
+});
+
+/** Edita texto, foto (vacía = se conserva la actual) y republicación. La mascota no cambia. */
+export const editarPublicacionRefugio = (id, { texto, foto = "", republicarCadaDias = null }) => intentar(async () => {
+  const r = await put(`/refugio/publicaciones/${id}`, { texto, foto, republicarCadaDias });
   return { ok: true, publicacion: r.publicacion };
 });
 

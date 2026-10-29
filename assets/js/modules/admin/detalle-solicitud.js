@@ -6,6 +6,7 @@
  */
 import { requerirRol } from "../../core/router-guard.js";
 import { montarNavbar, refrescarInsigniaSolicitudes } from "../../components/navbar.js";
+import { crearVisor } from "../../components/visor-documento.js";
 import { obtenerSolicitud, aprobarRefugio, rechazarRefugio, marcarDocumento, descargarDocumento } from "../../core/servicios-admin.js";
 import { crearElemento, ESTADOS_REFUGIO, ETIQUETAS_DOCUMENTO, formatearFecha, formatearTamano, limpiarErroresAlEscribir, marcarError, mostrarAlerta, ocultarAlerta } from "../../core/utils.js";
 
@@ -13,9 +14,12 @@ const sesion = requerirRol("admin");
 
 const alerta = document.getElementById("alerta");
 const lista = document.getElementById("lista-documentos");
-const visor = document.getElementById("visor");
-const visorTitulo = document.getElementById("visor-titulo");
-const visorAbrir = document.getElementById("visor-abrir");
+const visor = crearVisor({
+  area: document.getElementById("visor"),
+  titulo: document.getElementById("visor-titulo"),
+  abrir: document.getElementById("visor-abrir"),
+});
+const enlaceMascotas = document.getElementById("ver-mascotas");
 const progreso = document.getElementById("progreso");
 const decision = document.getElementById("decision");
 const botonAprobar = document.getElementById("boton-aprobar");
@@ -26,8 +30,6 @@ const campoMotivo = document.getElementById("campo-motivo");
 const alertaRechazo = document.getElementById("alerta-rechazo");
 
 let refugio = null;
-let urlActual = null;   // URL temporal del documento que se está viendo
-let pedidoVisor = 0;    // para ignorar respuestas viejas si se hace clic rápido en varios documentos
 
 if (sesion) {
   montarNavbar({ sesion, activa: "solicitudes" });
@@ -71,6 +73,9 @@ function render() {
 
   const pendiente = refugio.estado === "pendiente";
   decision.hidden = !pendiente;
+  // Las mascotas solo existen en refugios que ya fueron aprobados alguna vez
+  enlaceMascotas.hidden = !["aprobado", "suspendido"].includes(refugio.estado);
+  enlaceMascotas.href = `mascotas-refugio.html?id=${encodeURIComponent(refugio.id)}`;
   document.getElementById("ayuda-checklist").textContent = pendiente
     ? "Abre cada documento con «Ver», revísalo y márcalo cuando esté correcto. Para aprobar hay que revisar todos."
     : "Esta solicitud ya fue resuelta; la lista queda solo para consulta.";
@@ -106,42 +111,18 @@ function actualizarProgreso() {
 
 /* ---------- Visor ---------- */
 
-function limpiarVisor() {
-  if (urlActual) URL.revokeObjectURL(urlActual);
-  urlActual = null;
-  visorAbrir.hidden = true;
-}
-
-async function verDocumento(id) {
+function verDocumento(id) {
   const documento = refugio.documentos.find((d) => d.id === id);
   if (!documento) return;
-  const pedido = ++pedidoVisor;
   const etiqueta = ETIQUETAS_DOCUMENTO[documento.tipo] || documento.tipo;
-  visorTitulo.textContent = `${etiqueta} — ${documento.nombre}`;
-  visor.replaceChildren(crearElemento("p", { clase: "vacio", texto: "Cargando documento…" }));
   lista.querySelectorAll(".documento-item").forEach((li) => li.classList.toggle("documento-item--activo", li.dataset.id === id));
-
-  try {
-    const archivo = await descargarDocumento(id);
-    if (pedido !== pedidoVisor) return; // se pidió otro documento mientras descargaba este
-    limpiarVisor();
-    urlActual = URL.createObjectURL(archivo);
-    visor.replaceChildren(archivo.type === "application/pdf"
-      ? crearElemento("iframe", { clase: "visor__marco", atributos: { src: urlActual, title: `Documento: ${etiqueta}` } })
-      : crearElemento("img", { clase: "visor__imagen", atributos: { src: urlActual, alt: `Documento: ${etiqueta}` } }));
-    visorAbrir.href = urlActual;
-    visorAbrir.hidden = false;
-  } catch (error) {
-    if (pedido !== pedidoVisor) return;
-    visor.replaceChildren(crearElemento("p", { clase: "vacio", texto: error.message || "No se pudo abrir el documento." }));
-  }
+  visor.mostrar(() => descargarDocumento(id), `${etiqueta} — ${documento.nombre}`);
 }
 
 /* ---------- Eventos ---------- */
 
 function enlazarEventos() {
   limpiarErroresAlEscribir(formularioRechazo);
-  window.addEventListener("pagehide", limpiarVisor);
 
   // Delegación: "Ver" y las casillas del checklist
   lista.addEventListener("click", (evento) => {

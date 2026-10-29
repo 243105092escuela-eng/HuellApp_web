@@ -56,6 +56,12 @@ function crearFila(r) {
     clase: "boton boton--contorno boton--pequeno", texto: r.estado === "pendiente" ? "Revisar" : "Ver detalle",
     atributos: { href: `detalle-solicitud.html?id=${encodeURIComponent(r.id)}`, "aria-label": `Ver los datos y documentos de ${r.nombre}` },
   })];
+  if (r.estado === "aprobado" || r.estado === "suspendido") {
+    acciones.push(crearElemento("a", {
+      clase: "boton boton--secundario boton--pequeno", texto: "Mascotas",
+      atributos: { href: `mascotas-refugio.html?id=${encodeURIComponent(r.id)}`, "aria-label": `Ver las mascotas y documentos de ${r.nombre}` },
+    }));
+  }
   if (r.estado === "aprobado") {
     acciones.push(crearElemento("button", { clase: "boton boton--peligro boton--pequeno", texto: "Suspender", atributos: { type: "button", "data-accion": "suspender", "aria-label": `Suspender a ${r.nombre}` } }));
   }
