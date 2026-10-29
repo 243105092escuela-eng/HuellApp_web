@@ -17,7 +17,7 @@
   <link rel="stylesheet" href="../assets/css/pages/login.css">
   <script type="module" src="../assets/js/modules/auth/registro-refugio.js"></script>
 </head>
-<body class="pagina-registro">
+<body class="pagina-registro" data-protegida>
   <header class="encabezado">
     <div class="encabezado__interno">
       <a class="marca" href="login.html" aria-label="HuellApp, ir al inicio de sesión">
@@ -28,8 +28,15 @@
   </header>
 
   <main class="registro">
-    <h1>Registro de refugio</h1>
-    <p class="registro__intro">Un administrador revisará tus documentos antes de activar tu panel. Mientras tanto tu solicitud queda como Pendiente de verificación.</p>
+    <h1 id="registro-titulo">Registro de refugio</h1>
+    <p id="registro-intro" class="registro__intro">Un administrador revisará tus documentos antes de activar tu panel. Mientras tanto tu solicitud queda como Pendiente de verificación.</p>
+
+    <!-- Solo en modo apelación (?apelacion=1): motivo del rechazo -->
+    <section id="aviso-apelacion" class="apelacion-aviso" aria-labelledby="apelacion-titulo" hidden>
+      <h2 id="apelacion-titulo" class="apelacion-aviso__titulo">Motivo del rechazo</h2>
+      <p id="apelacion-motivo"></p>
+      <p class="texto-pequeno">Tus datos y documentos ya están cargados. Corrige lo necesario y reemplaza los documentos marcados en rojo; los demás se conservan si no eliges un archivo nuevo.</p>
+    </section>
 
     <form id="form-registro" novalidate>
       <div id="alerta" role="alert" hidden></div>
@@ -69,7 +76,7 @@
         </div>
       </fieldset>
 
-      <fieldset>
+      <fieldset id="cuenta-acceso">
         <legend>Cuenta de acceso</legend>
         <div class="formulario-grid">
           <div class="campo">
@@ -113,7 +120,7 @@
       </fieldset>
 
       <div class="registro__acciones">
-        <a class="boton boton--contorno" href="login.html">Volver</a>
+        <a id="boton-volver" class="boton boton--contorno" href="login.html">Volver</a>
         <button class="boton boton--primario" id="boton-enviar" type="submit">Enviar solicitud</button>
       </div>
     </form>

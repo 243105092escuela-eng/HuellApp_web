@@ -15,8 +15,10 @@ async function iniciar() {
   const [resumen, pendientes] = await Promise.all([obtenerResumenAdmin(), listarRefugios("pendiente")]);
   document.querySelectorAll("[data-resumen]").forEach((nodo) => { nodo.textContent = String(resumen[nodo.dataset.resumen]); });
 
-  // El servidor entrega las más nuevas primero; para revisar conviene atender primero las más antiguas
-  pendientes.sort((a, b) => new Date(a.fechaSolicitud) - new Date(b.fechaSolicitud));
+  // El servidor entrega las más nuevas primero; para revisar conviene atender primero las más antiguas.
+  // Una apelación cuenta desde que se reenvió (vuelve a la cola), no desde el registro original.
+  const entrada = (r) => new Date(r.apeladoEn || r.fechaSolicitud);
+  pendientes.sort((a, b) => entrada(a) - entrada(b));
 
   document.getElementById("conteo").textContent = pendientes.length === 1 ? "1 solicitud pendiente" : `${pendientes.length} solicitudes pendientes`;
   document.getElementById("sin-solicitudes").hidden = pendientes.length > 0;
@@ -26,10 +28,14 @@ async function iniciar() {
   pendientes.forEach((r) => {
     const revisados = r.documentos.filter((d) => d.verificado).length;
     fragmento.append(crearElemento("tr", { atributos: { "data-id": r.id } }, [
-      crearElemento("th", { texto: r.nombre, atributos: { scope: "row" } }),
+      crearElemento("th", { atributos: { scope: "row" } }, [
+        document.createTextNode(r.nombre),
+        // Las apelaciones (reenviadas tras un rechazo) se distinguen de las solicitudes nuevas
+        ...(r.apelaciones > 0 ? [document.createTextNode(" "), crearElemento("span", { clase: "insignia insignia--pendiente", texto: "Apelación" })] : []),
+      ]),
       crearElemento("td", { texto: r.responsable }),
       crearElemento("td", { texto: r.correo }),
-      crearElemento("td", { texto: `${formatearFecha(r.fechaSolicitud)} (${tiempoRelativo(r.fechaSolicitud)})` }),
+      crearElemento("td", { texto: `${formatearFecha(entrada(r).toISOString())} (${tiempoRelativo(entrada(r).toISOString())})` }),
       crearElemento("td", { texto: `${revisados} de ${r.documentos.length} revisados` }),
       crearElemento("td", {}, crearElemento("a", {
         clase: "boton boton--primario boton--pequeno", texto: "Revisar",

@@ -71,7 +71,17 @@ function render() {
   motivo.hidden = !(etiquetaMotivo && refugio.motivoRechazo);
   if (!motivo.hidden) motivo.textContent = `${etiquetaMotivo}: ${refugio.motivoRechazo}`;
 
+  // Solicitud reenviada tras un rechazo: se avisa y se muestra el motivo anterior
   const pendiente = refugio.estado === "pendiente";
+  const avisoApelacion = document.getElementById("aviso-apelacion");
+  avisoApelacion.hidden = !(pendiente && refugio.apelaciones > 0);
+  if (!avisoApelacion.hidden) {
+    const veces = refugio.apelaciones === 1 ? "" : ` (apelación n.º ${refugio.apelaciones})`;
+    avisoApelacion.textContent = `Esta solicitud es una apelación${veces}, reenviada el ${formatearFecha(refugio.apeladoEn)}.`
+      + (refugio.motivoAnterior ? ` Motivo del rechazo anterior: ${refugio.motivoAnterior}` : "")
+      + " Los documentos reemplazados aparecen como «Nuevo».";
+  }
+
   decision.hidden = !pendiente;
   // Las mascotas solo existen en refugios que ya fueron aprobados alguna vez
   enlaceMascotas.hidden = !["aprobado", "suspendido"].includes(refugio.estado);
@@ -86,6 +96,11 @@ function render() {
   actualizarProgreso();
 }
 
+/** ¿El refugio subió este documento al apelar? (para que el administrador sepa qué revisar de nuevo) */
+function esNuevo(d) {
+  return refugio.estado === "pendiente" && refugio.apelaciones > 0 && Boolean(d.fecha && refugio.apeladoEn) && d.fecha >= refugio.apeladoEn;
+}
+
 function crearDocumento(d, editable) {
   const etiqueta = ETIQUETAS_DOCUMENTO[d.tipo] || d.tipo;
   return crearElemento("li", { clase: "documento-item", atributos: { "data-id": d.id } }, [
@@ -96,6 +111,8 @@ function crearDocumento(d, editable) {
     crearElemento("div", { clase: "documento-item__info" }, [
       crearElemento("strong", { texto: etiqueta }),
       crearElemento("span", { clase: "texto-suave texto-pequeno", texto: `${d.nombre} · ${formatearTamano(d.tamano)}` }),
+      ...(d.conError ? [crearElemento("span", { clase: "insignia insignia--rechazado", texto: "Señalado con error" })] : []),
+      ...(esNuevo(d) ? [crearElemento("span", { clase: "insignia insignia--pendiente", texto: "Nuevo (apelación)" })] : []),
     ]),
     crearElemento("button", { clase: "boton boton--contorno boton--pequeno", texto: "Ver", atributos: { type: "button", "data-ver": d.id, "aria-label": `Ver ${etiqueta}` } }),
   ]);
@@ -157,6 +174,13 @@ function enlazarEventos() {
     formularioRechazo.reset();
     marcarError(campoMotivo, "");
     ocultarAlerta(alertaRechazo);
+    // Una casilla por documento para señalar los que el refugio debe reemplazar
+    document.getElementById("docs-con-error").hidden = refugio.documentos.length === 0;
+    document.getElementById("lista-docs-error").replaceChildren(...refugio.documentos.map((d) =>
+      crearElemento("label", { clase: "docs-error__opcion" }, [
+        crearElemento("input", { atributos: { type: "checkbox", name: "conError", value: d.id } }),
+        crearElemento("span", { texto: `${ETIQUETAS_DOCUMENTO[d.tipo] || d.tipo} — ${d.nombre}` }),
+      ])));
     modalRechazo.showModal();
     formularioRechazo.elements.motivo.focus();
   });
@@ -169,7 +193,8 @@ function enlazarEventos() {
       formularioRechazo.elements.motivo.focus();
       return;
     }
-    const resultado = await rechazarRefugio(refugio.id, motivo);
+    const conError = [...formularioRechazo.querySelectorAll('input[name="conError"]:checked')].map((c) => c.value);
+    const resultado = await rechazarRefugio(refugio.id, motivo, conError);
     if (!resultado.ok) { mostrarAlerta(alertaRechazo, "error", resultado.error); return; }
     modalRechazo.close();
     await aplicarResultado(resultado, `La solicitud de «${refugio.nombre}» fue rechazada.`);

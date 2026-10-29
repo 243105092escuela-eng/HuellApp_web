@@ -101,11 +101,25 @@
 .registro__acciones { display: flex; justify-content: space-between; gap: var(--e4); }
 .horario { display: flex; gap: var(--e3); align-items: center; }
 
+/* Modo apelación: motivo del rechazo y documentos señalados por el administrador */
+.apelacion-aviso { margin-bottom: var(--e5); padding: var(--e4) var(--e5); background: var(--aviso-fondo); color: var(--aviso); border-left: 6px solid var(--amarillo-fuerte); border-radius: var(--radio-m); }
+.apelacion-aviso__titulo { margin-bottom: var(--e2); font-size: 1.05rem; }
+.apelacion-aviso p { margin: 0; }
+.apelacion-aviso p + p { margin-top: var(--e2); }
+.documento-actual { font-size: 0.8125rem; color: var(--tinta-suave); overflow-wrap: anywhere; }
+.campo--observado { padding: var(--e3); background: var(--error-fondo); border: 2px solid var(--error); border-radius: var(--radio-m); }
+.campo--observado .campo__etiqueta { color: var(--error); }
+.campo__aviso { margin: 0; color: var(--error); font-size: 0.875rem; }
+.campo--observado.campo--reemplazado { background: var(--exito-fondo); border-color: var(--exito); }
+.campo--observado.campo--reemplazado .campo__etiqueta,
+.campo--observado.campo--reemplazado .campo__aviso { color: var(--exito); }
+.campo--reemplazado .documento-actual { color: var(--exito); font-weight: 700; }
+
 /* ---------- Estado del refugio ---------- */
 .estado { width: min(640px, calc(100% - 48px)); margin: var(--e7) auto; text-align: center; }
 .estado h1 { margin-block: var(--e4); font-size: 1.9rem; }
 .estado p { margin-bottom: var(--e5); }
-.estado__acciones { display: flex; justify-content: center; gap: var(--e3); }
+.estado__acciones { display: flex; flex-wrap: wrap; justify-content: center; gap: var(--e3); }
 
 /* ---------- Splash de index.html ---------- */
 .cargando { display: grid; place-items: center; min-height: 100vh; gap: var(--e3); text-align: center; background: var(--aqua-suave); }

@@ -39,6 +39,13 @@
 /* El área del visor (visor__area, visor__marco, visor__imagen) vive en components/visor.css */
 .visor { position: sticky; top: calc(var(--e5) + 76px); }
 
+/* ---------- Rechazo: documentos con problemas ---------- */
+.docs-error { margin: 0 0 var(--e4); padding: var(--e3); border: 2px solid var(--borde); border-radius: var(--radio-m); }
+.docs-error__lista { display: flex; flex-direction: column; gap: var(--e2); margin-top: var(--e2); }
+.docs-error__opcion { display: flex; align-items: center; gap: var(--e2); font-weight: 600; cursor: pointer; overflow-wrap: anywhere; }
+.docs-error__opcion input { width: 20px; height: 20px; flex: none; accent-color: var(--error); }
+.documento-item__info .insignia { align-self: flex-start; margin-top: 2px; }
+
 /* ---------- Mascotas de un refugio (documentos por mascota) ---------- */
 .solicitud-cabecera__mascotas { margin-top: var(--e4); }
 

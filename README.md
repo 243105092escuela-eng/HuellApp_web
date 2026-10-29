@@ -20,10 +20,16 @@ También puedes abrir el sitio con **Live Server** de VS Code (clic derecho sobr
 | Usuario | ana@huellapp.mx | Vista de usuario |
 | Refugio verificado | refugio@huellapp.mx | Panel del refugio |
 | Refugio pendiente | pendiente@huellapp.mx | Mensaje "Pendiente de verificación" |
-| Refugio rechazado | rechazado@huellapp.mx | Mensaje con el motivo del rechazo |
+| Refugio rechazado | rechazado@huellapp.mx | Mensaje con el motivo del rechazo y botón **Solicitar apelación** |
 | Administrador | admin@huellapp.mx | Vista de administrador |
 
 En el login hay un desplegable "Cuentas de demostración" que rellena el formulario.
+
+### Apelación de un refugio rechazado
+
+1. En `pages/estado-refugio.html`, un refugio **rechazado** ve el botón **Solicitar apelación**, que abre `pages/registro-refugio.html?apelacion=1`.
+2. En modo apelación el formulario precarga los datos y muestra el archivo actual de cada documento. Los que el administrador señaló como erróneos aparecen en rojo con un aviso y hay que reemplazarlos; los demás se conservan si no se elige otro archivo. El correo no se edita y no se pide contraseña.
+3. Al reenviar, el servidor reemplaza los archivos, deja la solicitud en **pendiente** (vuelve a `admin/solicitudes.html`, marcada como «Apelación») y el sitio regresa a la pantalla de estado.
 
 ## Vista de usuario (Fase 2)
 
@@ -55,7 +61,7 @@ Entra con `admin@huellapp.mx` / `Demo1234` (pestaña **Administrador** del login
 | Pantalla | Archivo | Qué hace |
 |---|---|---|
 | Solicitudes | `pages/admin/solicitudes.html` | Contadores (pendientes, aprobados, rechazados, suspendidos) y la cola de refugios por revisar, las más antiguas primero. El menú muestra cuántas hay pendientes. |
-| Revisar solicitud | `pages/admin/detalle-solicitud.html?id=…` | Datos del refugio, **checklist por documento** (se guarda en la base de datos), **visor** de cada archivo (PDF o imagen) y la decisión: **Aprobar** (solo con todos los documentos revisados) o **Rechazar** con motivo obligatorio, que el refugio verá al intentar entrar. |
+| Revisar solicitud | `pages/admin/detalle-solicitud.html?id=…` | Datos del refugio, **checklist por documento** (se guarda en la base de datos), **visor** de cada archivo (PDF o imagen) y la decisión: **Aprobar** (solo con todos los documentos revisados) o **Rechazar** con motivo obligatorio, que el refugio verá al intentar entrar, y marcando (opcional) qué documentos tienen problemas. Si la solicitud es una apelación, muestra el motivo del rechazo anterior y marca los documentos nuevos. |
 | Refugios | `pages/admin/refugios.html` | Lista con filtro por estado (verificados por defecto) y búsqueda. Permite **suspender** un refugio verificado (con motivo opcional) o **reactivar** uno suspendido. Un refugio suspendido pierde el acceso a su panel al instante. Botón **Mascotas** en verificados y suspendidos. |
 | Mascotas del refugio | `pages/admin/mascotas-refugio.html?id=…` | Inventario completo del refugio (todos los estatus) con filtros, incluido «con documentos por revisar». Al elegir una mascota: sus datos, **checklist de sus documentos** y **visor**. |
 

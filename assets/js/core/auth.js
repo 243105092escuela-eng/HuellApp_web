@@ -55,6 +55,31 @@ export const registrarRefugio = (datos) => intentar(async () => {
   return { ok: true };
 });
 
+/* ---------- Apelación de un refugio rechazado ---------- */
+
+/**
+ * Datos y documentos actuales del refugio rechazado, para precargar el formulario.
+ * @returns {Promise<object|null>} null si la solicitud ya no está rechazada (no hay nada que apelar)
+ */
+export async function obtenerApelacion() {
+  try {
+    return (await get("/auth/apelacion")).refugio;
+  } catch (error) {
+    if (error.estado === 409) return null;
+    throw error;
+  }
+}
+
+/**
+ * Reenvía la solicitud corregida. `datos.documentos` lleva SOLO los archivos nuevos
+ * ({ tipo, nombre, dataUrl }); cada uno reemplaza al anterior de su tipo.
+ * El servidor deja la solicitud otra vez en "pendiente".
+ */
+export const enviarApelacion = (datos) => intentar(async () => {
+  const r = await post("/auth/apelacion", datos);
+  return { ok: true, refugio: r.refugio };
+});
+
 /** Datos completos del refugio de la sesión (con correo y documentos). */
 export async function obtenerMiRefugio() {
   return (await get("/refugio/yo")).refugio;

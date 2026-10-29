@@ -28,8 +28,11 @@ const cambiarEstado = (id, accion, cuerpo = {}) => intentar(async () => {
 });
 
 export const aprobarRefugio = (id) => cambiarEstado(id, "aprobar");
-/** El motivo es obligatorio (mínimo 10 caracteres). */
-export const rechazarRefugio = (id, motivo) => cambiarEstado(id, "rechazar", { motivo });
+/**
+ * El motivo es obligatorio (mínimo 10 caracteres). `documentosConError` son los ids de los
+ * documentos que el refugio deberá reemplazar si apela.
+ */
+export const rechazarRefugio = (id, motivo, documentosConError = []) => cambiarEstado(id, "rechazar", { motivo, documentosConError });
 export const suspenderRefugio = (id, motivo = "") => cambiarEstado(id, "suspender", { motivo });
 export const reactivarRefugio = (id) => cambiarEstado(id, "reactivar");
 

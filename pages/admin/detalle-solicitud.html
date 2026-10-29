@@ -42,6 +42,7 @@
         <div><dt>Solicitud enviada</dt><dd id="dato-fecha"></dd></div>
       </dl>
       <p id="motivo" class="alerta alerta--aviso" hidden></p>
+      <p id="aviso-apelacion" class="alerta alerta--aviso" hidden></p>
       <a id="ver-mascotas" class="boton boton--secundario boton--pequeno solicitud-cabecera__mascotas" hidden>Ver mascotas y sus documentos</a>
     </header>
 
@@ -83,6 +84,11 @@
           <span class="campo__ayuda">El refugio verá este mensaje cuando intente entrar.</span>
           <span class="campo__error" role="alert"></span>
         </div>
+        <fieldset class="docs-error" id="docs-con-error">
+          <legend class="campo__etiqueta">Documentos con problemas (opcional)</legend>
+          <p class="campo__ayuda">El refugio verá un aviso junto a cada documento marcado y tendrá que reemplazarlo para apelar.</p>
+          <div id="lista-docs-error" class="docs-error__lista"></div>
+        </fieldset>
         <div id="alerta-rechazo" role="alert" hidden></div>
         <div class="modal__acciones">
           <button id="cancelar-rechazo" class="boton boton--contorno" type="button">Cancelar</button>
