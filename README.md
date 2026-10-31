@@ -37,7 +37,7 @@ En el login hay un desplegable "Cuentas de demostración" que rellena el formula
 |---|---|---|
 | Inicio | `pages/usuario/inicio.html` | KIRO (gato-robot) con globo de diálogo, buscador de dudas y preguntas frecuentes (respuestas predefinidas). |
 | Foro | `pages/usuario/foro.html` | Muro: crear publicación (texto + foto), feed por lotes con scroll infinito, «me gusta» en forma de huella (toggle) y comentarios (cada comentario es una "burbuja" con borde de acento y fondos alternados para distinguir las respuestas). Todo se guarda en la base de datos. |
-| Refugios | `pages/usuario/refugios.html` | Refugios **verificados**; al entrar (`?id=1`) se ven sus mascotas disponibles con filtros de nombre, especie, edad y tamaño. |
+| Refugios | `pages/usuario/refugios.html` | Refugios **verificados**; al entrar (`?id=1`) se ven sus mascotas disponibles con filtros de nombre, especie, edad y tamaño. Cada tarjeta tiene el botón **🐾 Adoptar**, que abre el formulario de solicitud (datos personales, hogar y documentos: identificación, comprobante de domicilio y 1 a 3 fotos del espacio). Dentro del formulario, el botón flotante **¿Dudas? Pregúntale a KIRO** abre un chat que responde al instante con las preguntas frecuentes del refugio. Tras enviar, el botón cambia a «Solicitud enviada». |
 | Reportar | `pages/usuario/reportar.html` | Cámara con `getUserMedia`, captura en `<canvas>`, vista previa y formulario. Si se niega el permiso, se puede subir un archivo. |
 | Coincidencias | `pages/usuario/coincidencias.html` | Posibles coincidencias con % de similitud; contactar (modal) o declinar. Un reporte nuevo se compara con los de otras personas y puede generar coincidencias. |
 
@@ -50,6 +50,8 @@ Entra con `refugio@huellapp.mx` / `Demo1234` (pestaña **Refugio** del login).
 | Panel | `pages/refugio/panel.html` | Contadores (registradas, disponibles, en proceso, adoptadas, publicaciones), accesos rápidos y últimas mascotas. |
 | Inventario | `pages/refugio/inventario.html` | **CRUD completo**: tabla con búsqueda y filtros, alta/edición en un diálogo con validación, cambio rápido de estatus y eliminación con confirmación (borra también sus publicaciones y documentos). Botón **Documentos (n)** por mascota: adjuntar, ver y eliminar certificados de vacunación, esterilización, pedigree, etc. (PDF/JPG/PNG, máx. 5 MB), con el estado de revisión del administrador. |
 | Publicaciones | `pages/refugio/publicaciones.html` | Elegir una mascota del inventario + texto + foto opcional + **republicación automática** (cada semana, cada 2 semanas, cada mes o cada N días). Se muestra en la página pública del refugio (vista de usuario). Las publicaciones se pueden **editar** (texto, foto y periodicidad) y la lista indica cuándo será la próxima republicación. |
+| Adopciones | `pages/refugio/adopciones.html` | Solicitudes de adopción recibidas: contadores, filtro por estado y búsqueda. En el detalle, datos del solicitante y de su hogar, **visor** de sus documentos y la respuesta del refugio (nueva, en revisión, aprobada o rechazada, con nota para el solicitante; al rechazar es obligatoria). |
+| Preguntas | `pages/refugio/preguntas.html` | Alta, edición, ocultar/mostrar y eliminación de **preguntas frecuentes** con su respuesta y palabras clave. Las usa KIRO en el formulario de adopción. Incluye un probador («Prueba a KIRO») y, si no hay ninguna, un botón para empezar con preguntas sugeridas. |
 | Perfil | `pages/refugio/perfil.html` | Estado de verificación, datos fijos y documentos, y datos de contacto editables (teléfono, dirección, horario, descripción). |
 
 Lo que el refugio cambia lo ven los usuarios: la mascota nueva aparece en su listado, las publicaciones en «Novedades del refugio» y los datos de contacto en su ficha. Las mascotas **adoptadas** dejan de mostrarse a los usuarios, y un refugio pendiente, rechazado o suspendido no puede entrar a estas páginas (ve su estado).
@@ -77,8 +79,9 @@ Las fotos se reducen a 640 px en el navegador antes de enviarse (las de la cáma
 
 - `assets/js/core/` — `config` (dónde está el servidor), `api` (cliente HTTP: token, errores, sesión vencida, aviso de servidor apagado), `storage` (guarda la sesión), `auth` (sesión y registros), `router-guard` (guardias por rol, solo de experiencia), `utils`.
 - `assets/js/core/servicios.js`, `servicios-refugio.js` y `servicios-admin.js` — capa de datos: una función `async` por operación, que llama a la API. Los módulos de página no saben nada de HTTP.
-- `assets/js/components/` — navbar, like-huella, camara, chatbot-kiro, tarjeta-mascota, tarjeta-publicacion y visor-documento (reutilizables).
-- `assets/js/data/` — `cuentas-demo.js` (atajos del login) y `mock-kiro.js` (preguntas del asistente, que no usan servidor).
+- `assets/js/components/` — navbar, like-huella, camara, chatbot-kiro, tarjeta-mascota, tarjeta-publicacion, visor-documento y asistente-adopcion (reutilizables).
+- `assets/js/core/buscador-faq.js` — encuentra la pregunta frecuente que responde una duda escrita libremente (sin acentos ni mayúsculas, por raíces de palabras y con sinónimos como «INE» → identificación). Lo usan el asistente del formulario de adopción y el probador del refugio; funciona en el navegador, sin servicios externos.
+- `assets/js/data/` — `cuentas-demo.js` (atajos del login), `mock-kiro.js` (preguntas del asistente de inicio) y `preguntas-adopcion.js` (respuestas generales que usa KIRO si ninguna pregunta del refugio responde la duda).
 - `assets/js/modules/<seccion>/` — un módulo JS por página; carga solo lo que necesita.
 - `assets/css/` — `base/` (tokens, reset, tipografía, layout), `components/` (reutilizables), `pages/` (uno por sección). Cada HTML enlaza solo los CSS que usa. Sin estilos inline.
 

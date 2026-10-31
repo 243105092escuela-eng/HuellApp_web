@@ -7,8 +7,31 @@ import { crearElemento, resolverImagen, formatearEdad } from "../core/utils.js";
 const ETIQUETA_ESPECIE = { perro: "Perro", gato: "Gato" };
 const mayuscula = (t) => t.charAt(0).toUpperCase() + t.slice(1);
 
-/** @param {object} m  mascota (la sirve la API: GET /api/refugios/:id/mascotas) */
-export function crearTarjetaMascota(m) {
+/** Texto del botón según la solicitud de adopción que ya tenga el usuario por esta mascota. */
+const ESTADO_SOLICITUD = {
+  pendiente: "Solicitud enviada",
+  "en revision": "Solicitud en revisión",
+  aprobada: "Solicitud aprobada",
+};
+
+/** Botón "Adoptar" del pie de la tarjeta (o el estado de la solicitud, si ya envió una). */
+function crearPieAdopcion(m, estadoSolicitud) {
+  const texto = ESTADO_SOLICITUD[estadoSolicitud];
+  const boton = texto
+    ? crearElemento("button", { clase: "boton boton--bloque boton--adoptar boton--adoptar-enviada", texto, atributos: { type: "button", disabled: true } })
+    : crearElemento("button", {
+      clase: "boton boton--bloque boton--adoptar",
+      atributos: { type: "button", "data-adoptar": m.id, "aria-label": `Adoptar a ${m.nombre}` },
+    }, [crearElemento("span", { texto: "🐾", atributos: { "aria-hidden": "true" } }), document.createTextNode("Adoptar")]);
+  return crearElemento("div", { clase: "mascota__pie" }, boton);
+}
+
+/**
+ * @param {object} m  mascota (la sirve la API: GET /api/refugios/:id/mascotas)
+ * @param {{conAdopcion?:boolean, estadoSolicitud?:string}} opciones
+ *   conAdopcion: agrega el botón "Adoptar"; estadoSolicitud: estado de la solicitud que ya envió el usuario
+ */
+export function crearTarjetaMascota(m, { conAdopcion = false, estadoSolicitud = "" } = {}) {
   const foto = crearElemento("img", {
     atributos: { src: resolverImagen(m.foto), alt: `${ETIQUETA_ESPECIE[m.especie] || "Mascota"} llamado ${m.nombre}`, width: 400, height: 300, loading: "lazy", decoding: "async" },
   });
@@ -25,6 +48,7 @@ export function crearTarjetaMascota(m) {
       crearElemento("ul", { clase: "mascota__datos" }, datos),
       crearElemento("p", { clase: "mascota__descripcion", texto: m.descripcion }),
       crearElemento("p", { clase: "mascota__salud texto-pequeno", texto: `Salud: ${m.salud}` }),
+      ...(conAdopcion ? [crearPieAdopcion(m, estadoSolicitud)] : []),
     ]),
   ]);
 }

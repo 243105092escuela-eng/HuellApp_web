@@ -22,6 +22,8 @@ const ICONOS = {
   panel: svg('<rect x="3" y="3" width="8" height="8" rx="1.5"/><rect x="13" y="3" width="8" height="8" rx="1.5"/><rect x="3" y="13" width="8" height="8" rx="1.5"/><rect x="13" y="13" width="8" height="8" rx="1.5"/>'),
   inventario: svg('<path d="M3 8l9-5 9 5v9l-9 5-9-5z"/><path d="M3 8l9 5 9-5M12 13v9"/>'),
   publicaciones: svg('<path d="M4 4h16v13H8l-4 4z"/><path d="M8 9h8M8 13h5"/>'),
+  adopciones: svg('<path d="M14 3H7a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V8z"/><path d="M14 3v5h5"/><path d="M12 18s-3-1.9-3-3.9a1.7 1.7 0 0 1 3-1.1 1.7 1.7 0 0 1 3 1.1c0 2-3 3.9-3 3.9z"/>'),
+  preguntas: svg('<circle cx="12" cy="12" r="9"/><path d="M9.5 9.5a2.5 2.5 0 0 1 4.9.6c0 1.7-2.4 2.2-2.4 3.9"/><path d="M12 17.2v.1"/>'),
   // Administrador
   solicitudes: svg('<path d="M9 4H6a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V6a2 2 0 0 0-2-2h-3"/><rect x="8" y="2" width="8" height="4" rx="1"/><path d="M9 14l2 2 4-4"/>'),
   perfil: svg('<circle cx="12" cy="8" r="4"/><path d="M4 21c0-4.4 3.6-7 8-7s8 2.6 8 7"/>'),
@@ -43,6 +45,8 @@ const MENUS = {
     { id: "panel", etiqueta: "Panel", ruta: "pages/refugio/panel.html" },
     { id: "inventario", etiqueta: "Inventario", ruta: "pages/refugio/inventario.html" },
     { id: "publicaciones", etiqueta: "Publicaciones", ruta: "pages/refugio/publicaciones.html" },
+    { id: "adopciones", etiqueta: "Adopciones", ruta: "pages/refugio/adopciones.html" },
+    { id: "preguntas", etiqueta: "Preguntas", ruta: "pages/refugio/preguntas.html" },
     { id: "perfil", etiqueta: "Perfil", ruta: "pages/refugio/perfil.html" },
   ],
   admin: [

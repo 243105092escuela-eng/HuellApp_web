@@ -85,6 +85,37 @@ export const eliminarPublicacionRefugio = (id) => intentar(async () => {
   return { ok: true };
 });
 
+/* ---------- Preguntas frecuentes (las usa el asistente del formulario de adopción) ---------- */
+
+export async function listarPreguntas() {
+  return (await get("/refugio/preguntas")).preguntas;
+}
+
+/** Crea (sin `id`) o edita (con `id`). @param {{pregunta, respuesta, claves:string[], activa:boolean}} datos */
+export const guardarPregunta = (datos, id = null) => intentar(async () => {
+  const r = id ? await put(`/refugio/preguntas/${id}`, datos) : await post("/refugio/preguntas", datos);
+  return { ok: true, pregunta: r.pregunta };
+});
+
+export const eliminarPregunta = (id) => intentar(async () => {
+  await del(`/refugio/preguntas/${id}`);
+  return { ok: true };
+});
+
+/* ---------- Solicitudes de adopción recibidas ---------- */
+
+export async function listarSolicitudesAdopcion() {
+  return (await get("/refugio/adopciones")).solicitudes;
+}
+
+/** @param {"pendiente"|"en revision"|"aprobada"|"rechazada"} estado  Rechazar exige `nota`. */
+export const cambiarEstadoAdopcion = (id, estado, nota = "") => intentar(async () => {
+  const r = await patch(`/refugio/adopciones/${id}`, { estado, nota });
+  return { ok: true, solicitud: r.solicitud };
+});
+
+export const descargarDocumentoAdopcion = (solicitudId, documentoId) => descargar(`/refugio/adopciones/${solicitudId}/documentos/${documentoId}/archivo`);
+
 /* ---------- Perfil ---------- */
 
 /** Solo se pueden editar: telefono, direccion, horario y descripcion. */

@@ -16,6 +16,8 @@
   <link rel="stylesheet" href="../../assets/css/components/botones.css">
   <link rel="stylesheet" href="../../assets/css/components/tarjetas.css">
   <link rel="stylesheet" href="../../assets/css/components/formularios.css">
+  <link rel="stylesheet" href="../../assets/css/components/modal.css">
+  <link rel="stylesheet" href="../../assets/css/components/adopcion.css">
   <link rel="stylesheet" href="../../assets/css/pages/usuario.css">
   <script type="module" src="../../assets/js/modules/usuario/refugios.js"></script>
 </head>
@@ -85,6 +87,85 @@
         <div id="lista-publicaciones" class="feed"></div>
       </section>
     </section>
+
+    <!-- Solicitud de adopción (se abre con el botón «Adoptar» de cada mascota) -->
+    <dialog id="modal-adopcion" class="modal modal--ancho adopcion" aria-labelledby="adopcion-titulo">
+      <header class="adopcion__cabecera">
+        <img id="adopcion-foto" class="adopcion__foto" alt="" width="88" height="88">
+        <div>
+          <p class="adopcion__antetitulo">Solicitud de adopción</p>
+          <h2 id="adopcion-titulo" class="adopcion__titulo">Adoptar</h2>
+          <p id="adopcion-refugio" class="texto-suave texto-pequeno"></p>
+        </div>
+      </header>
+
+      <form id="formulario-adopcion" novalidate>
+        <fieldset class="adopcion__grupo">
+          <legend>1. Tus datos</legend>
+          <div class="formulario-grid">
+            <div class="campo" data-campo="nombre"><label class="campo__etiqueta" for="ad-nombre">Nombre completo</label><input id="ad-nombre" name="nombre" class="campo__control" type="text" maxlength="100" autocomplete="name"><span class="campo__error" role="alert"></span></div>
+            <div class="campo" data-campo="correo"><label class="campo__etiqueta" for="ad-correo">Correo electrónico</label><input id="ad-correo" name="correo" class="campo__control" type="email" maxlength="120" autocomplete="email"><span class="campo__error" role="alert"></span></div>
+            <div class="campo" data-campo="telefono"><label class="campo__etiqueta" for="ad-telefono">Teléfono</label><input id="ad-telefono" name="telefono" class="campo__control" type="tel" maxlength="25" autocomplete="tel"><span class="campo__error" role="alert"></span></div>
+            <div class="campo" data-campo="ocupacion"><label class="campo__etiqueta" for="ad-ocupacion">Ocupación <span class="texto-suave">(opcional)</span></label><input id="ad-ocupacion" name="ocupacion" class="campo__control" type="text" maxlength="100"><span class="campo__error" role="alert"></span></div>
+            <div class="campo campo--completo" data-campo="direccion"><label class="campo__etiqueta" for="ad-direccion">Dirección donde vivirá la mascota</label><input id="ad-direccion" name="direccion" class="campo__control" type="text" maxlength="200" autocomplete="street-address" placeholder="Calle, número, colonia y municipio"><span class="campo__error" role="alert"></span></div>
+          </div>
+        </fieldset>
+
+        <fieldset class="adopcion__grupo">
+          <legend>2. Tu hogar</legend>
+          <div class="formulario-grid">
+            <div class="campo" data-campo="tipoVivienda">
+              <span class="campo__etiqueta" id="etiqueta-vivienda">Tipo de vivienda</span>
+              <div class="opciones" role="radiogroup" aria-labelledby="etiqueta-vivienda">
+                <label class="opcion"><input type="radio" name="tipoVivienda" value="casa"><span>Casa</span></label>
+                <label class="opcion"><input type="radio" name="tipoVivienda" value="departamento"><span>Departamento</span></label>
+                <label class="opcion"><input type="radio" name="tipoVivienda" value="otro"><span>Otro</span></label>
+              </div>
+              <span class="campo__error" role="alert"></span>
+            </div>
+            <div class="campo" data-campo="viviendaPropia">
+              <label class="campo__etiqueta" for="ad-propia">La vivienda es…</label>
+              <select id="ad-propia" name="viviendaPropia" class="campo__control"><option value="">Elige…</option><option value="propia">Propia</option><option value="rentada">Rentada</option><option value="familiar">De un familiar</option></select>
+              <span class="campo__error" role="alert"></span>
+            </div>
+            <div class="campo campo--completo" data-campo="otrasMascotas"><label class="campo__etiqueta" for="ad-otras">¿Tienes otras mascotas? <span class="texto-suave">(opcional)</span></label><input id="ad-otras" name="otrasMascotas" class="campo__control" type="text" maxlength="200" placeholder="Ej. Una gata de 3 años, esterilizada"><span class="campo__error" role="alert"></span></div>
+            <div class="campo campo--completo" data-campo="motivo">
+              <label class="campo__etiqueta" for="ad-motivo">¿Por qué quieres adoptar?</label>
+              <textarea id="ad-motivo" name="motivo" class="campo__control" maxlength="800" placeholder="Cuéntale al refugio sobre tu rutina, quién vive contigo y cómo cuidarás a la mascota."></textarea>
+              <span id="ad-contador" class="campo__ayuda" aria-hidden="true">0/800</span>
+              <span class="campo__error" role="alert"></span>
+            </div>
+          </div>
+        </fieldset>
+
+        <fieldset class="adopcion__grupo">
+          <legend>3. Documentos</legend>
+          <p class="campo__ayuda adopcion__ayuda">PDF, JPG o PNG de hasta 5 MB. ¿Dudas sobre qué subir? Pregúntale a KIRO con el botón de ayuda.</p>
+          <div class="formulario-grid">
+            <div class="campo" data-campo="identificacion"><label class="campo__etiqueta" for="ad-identificacion">Identificación oficial</label><input id="ad-identificacion" name="identificacion" class="campo__control" type="file" accept=".pdf,.jpg,.jpeg,.png"><span class="campo__ayuda">INE, pasaporte o cédula vigente.</span><span class="campo__error" role="alert"></span></div>
+            <div class="campo" data-campo="domicilio"><label class="campo__etiqueta" for="ad-domicilio">Comprobante de domicilio</label><input id="ad-domicilio" name="domicilio" class="campo__control" type="file" accept=".pdf,.jpg,.jpeg,.png"><span class="campo__ayuda">Recibo de luz, agua o teléfono reciente.</span><span class="campo__error" role="alert"></span></div>
+            <div class="campo campo--completo" data-campo="vivienda">
+              <label class="campo__etiqueta" for="ad-vivienda">Fotos del espacio donde vivirá la mascota (1 a 3)</label>
+              <input id="ad-vivienda" name="vivienda" class="campo__control" type="file" accept="image/jpeg,image/png" multiple>
+              <ul id="ad-fotos" class="adopcion__fotos" aria-label="Fotos elegidas"></ul>
+              <span class="campo__error" role="alert"></span>
+            </div>
+            <div class="campo campo--completo" data-campo="otro"><label class="campo__etiqueta" for="ad-otro">Otro documento <span class="texto-suave">(opcional)</span></label><input id="ad-otro" name="otro" class="campo__control" type="file" accept=".pdf,.jpg,.jpeg,.png"><span class="campo__ayuda">Por ejemplo, el permiso de tu arrendador para tener mascotas.</span><span class="campo__error" role="alert"></span></div>
+          </div>
+        </fieldset>
+
+        <div class="campo" data-campo="aceptaTerminos">
+          <label class="adopcion__acepto"><input type="checkbox" name="aceptaTerminos"><span>Acepto que el refugio revise mis datos y documentos para evaluar la adopción.</span></label>
+          <span class="campo__error" role="alert"></span>
+        </div>
+
+        <div id="alerta-adopcion" role="alert" hidden></div>
+        <div class="modal__acciones">
+          <button id="cancelar-adopcion" class="boton boton--contorno" type="button">Cancelar</button>
+          <button id="enviar-adopcion" class="boton boton--primario" type="submit"><span aria-hidden="true">🐾</span> Enviar solicitud</button>
+        </div>
+      </form>
+    </dialog>
   </main>
 </body>
 </html>

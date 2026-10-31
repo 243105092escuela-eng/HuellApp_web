@@ -6,8 +6,12 @@ import { requerirRol } from "../../core/router-guard.js";
 import { montarNavbar } from "../../components/navbar.js";
 import { crearTarjetaMascota } from "../../components/tarjeta-mascota.js";
 import { crearTarjetaPublicacion } from "../../components/tarjeta-publicacion.js";
-import { obtenerRefugiosVerificados, obtenerRefugioVerificado, obtenerMascotasDisponibles, obtenerPublicacionesRefugio } from "../../core/servicios.js";
+import {
+  obtenerRefugiosVerificados, obtenerRefugioVerificado, obtenerMascotasDisponibles, obtenerPublicacionesRefugio,
+  obtenerPreguntasRefugio, obtenerMisSolicitudesAdopcion,
+} from "../../core/servicios.js";
 import { crearElemento, debounce, normalizarTexto, mostrarAlerta, ocultarAlerta } from "../../core/utils.js";
+import { montarFormularioAdopcion } from "./adopcion.js";
 
 const LOTE = 6;
 
@@ -35,14 +39,53 @@ const filtroTamano = document.getElementById("filtro-tamano");
 let mascotasBase = [];   // mascotas del refugio abierto
 let coincidentes = [];   // resultado de aplicar los filtros
 let mostradas = 0;
+let refugioActual = null;
+const preguntasPorRefugio = new Map();  // caché de preguntas frecuentes (para el asistente)
+const solicitudesPorMascota = new Map(); // mascotaId → estado de la solicitud abierta o aprobada del usuario
 
 const sesion = requerirRol("usuario");
+let formularioAdopcion = null;
 
 if (sesion) {
   montarNavbar({ sesion, activa: "refugios" });
+  formularioAdopcion = montarFormularioAdopcion({ sesion, alEnviar: solicitudEnviada });
   enlazarEventos();
-  mostrarSegunUrl();
+  cargarMisSolicitudes().then(mostrarSegunUrl);
 }
+
+/* ---------- Adopción ---------- */
+
+/** Las rechazadas no cuentan: el usuario puede volver a intentarlo. */
+async function cargarMisSolicitudes() {
+  try {
+    (await obtenerMisSolicitudesAdopcion())
+      .filter((s) => s.estado !== "rechazada")
+      .forEach((s) => { if (!solicitudesPorMascota.has(s.mascotaId)) solicitudesPorMascota.set(s.mascotaId, s.estado); });
+  } catch { /* sin conexión: la franja de aviso ya lo explica; los botones siguen activos */ }
+}
+
+async function abrirAdopcion(mascotaId) {
+  const mascota = mascotasBase.find((m) => m.id === mascotaId);
+  if (!mascota || !refugioActual) return;
+  if (!preguntasPorRefugio.has(refugioActual.id)) {
+    let preguntas = [];
+    try { preguntas = await obtenerPreguntasRefugio(refugioActual.id); } catch { /* el asistente usa las respuestas generales */ }
+    preguntasPorRefugio.set(refugioActual.id, preguntas);
+  }
+  formularioAdopcion.abrir(mascota, refugioActual, preguntasPorRefugio.get(refugioActual.id));
+}
+
+function solicitudEnviada(solicitud) {
+  solicitudesPorMascota.set(solicitud.mascotaId, solicitud.estado);
+  // Se redibuja solo la tarjeta de esa mascota: su botón pasa a "Solicitud enviada"
+  const tarjeta = rejilla.querySelector(`.mascota[data-id="${CSS.escape(solicitud.mascotaId)}"]`);
+  const mascota = mascotasBase.find((m) => m.id === solicitud.mascotaId);
+  if (tarjeta && mascota) tarjeta.replaceWith(crearTarjeta(mascota));
+  mostrarAlerta(alerta, "exito", `¡Listo! Enviamos tu solicitud para adoptar a ${solicitud.mascotaNombre}. ${refugioActual?.nombre || "El refugio"} revisará tus datos y te contactará.`);
+  alerta.scrollIntoView({ behavior: "smooth", block: "center" });
+}
+
+const crearTarjeta = (m) => crearTarjetaMascota(m, { conAdopcion: true, estadoSolicitud: solicitudesPorMascota.get(m.id) });
 
 /* ---------- Navegación dentro de la página (sin recargar) ---------- */
 
@@ -68,6 +111,12 @@ function enlazarEventos() {
     irARefugio(enlace.dataset.refugio);
   });
   document.getElementById("volver").addEventListener("click", (evento) => { evento.preventDefault(); irARefugio(null); });
+
+  // Botón "Adoptar" de cada tarjeta (delegación: las tarjetas se crean y recrean por lotes)
+  rejilla.addEventListener("click", (evento) => {
+    const boton = evento.target.closest("[data-adoptar]");
+    if (boton) abrirAdopcion(boton.dataset.adoptar);
+  });
 
   // Filtros: el texto lleva debounce; los selects aplican de inmediato
   document.querySelector(".filtros").addEventListener("submit", (evento) => evento.preventDefault());
@@ -116,6 +165,7 @@ async function mostrarDetalle(id) {
     return;
   }
 
+  refugioActual = refugio;
   vistaLista.hidden = true;
   vistaDetalle.hidden = false;
   document.title = `${refugio.nombre} · HuellApp`;
@@ -153,7 +203,7 @@ function aplicarFiltros() {
 function mostrarMas() {
   const lote = coincidentes.slice(mostradas, mostradas + LOTE);
   const fragmento = document.createDocumentFragment();
-  lote.forEach((m) => fragmento.append(crearTarjetaMascota(m)));
+  lote.forEach((m) => fragmento.append(crearTarjeta(m)));
   rejilla.append(fragmento);
   mostradas += lote.length;
 

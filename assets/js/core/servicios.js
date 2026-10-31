@@ -52,6 +52,28 @@ export async function obtenerPublicacionesRefugio(refugioId) {
   return (await get(`/refugios/${encodeURIComponent(refugioId)}/publicaciones`)).publicaciones;
 }
 
+/* ---------- Adopción ---------- */
+
+/** Preguntas frecuentes activas de un refugio: [{ id, pregunta, respuesta, claves[] }] */
+export async function obtenerPreguntasRefugio(refugioId) {
+  return (await get(`/refugios/${encodeURIComponent(refugioId)}/preguntas`)).preguntas;
+}
+
+/** Solicitudes de adopción del usuario con su estado: [{ mascotaId, estado, notaRefugio, ... }] */
+export async function obtenerMisSolicitudesAdopcion() {
+  return (await get("/adopciones")).solicitudes;
+}
+
+/**
+ * Envía una solicitud de adopción.
+ * @param {object} datos  mascotaId, nombre, correo, telefono, direccion, ocupacion, tipoVivienda,
+ *   viviendaPropia, otrasMascotas, motivo, aceptaTerminos y documentos [{ tipo, nombre, dataUrl }]
+ */
+export const enviarSolicitudAdopcion = (datos) => intentar(async () => {
+  const r = await post("/adopciones", datos);
+  return { ok: true, solicitud: r.solicitud };
+});
+
 /* ---------- Reportes y coincidencias ---------- */
 
 /** @param {{tipo:"perdida"|"encontrada", descripcion:string, zona:string, foto:string}} datos */
